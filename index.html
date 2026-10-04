@@ -46,7 +46,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
-<header><h1>Suivi des OF – Rapport de Contrôle (RC)</h1><p>First Article Inspection · indicateurs hebdomadaires</p></header>
+<header><h1>Suivi des OF – Rapport de Contrôle (RC)</h1><p>First Article Inspection · indicateurs hebdomadaires · <span id="net">● Connexion…</span></p></header>
 <nav role="tablist">
 <button role="tab" data-t="saisie" aria-selected="true">Saisie</button>
 <button role="tab" data-t="liste" aria-selected="false">Tous les OF</button>
@@ -88,7 +88,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 
 <section id="param">
 <div class="card"><h2>Sauvegarde des données</h2>
-<p style="margin-top:0;color:var(--mut)">Les données sont gardées dans ce navigateur, sur ce PC. Pour les déplacer ou les sauvegarder, exportez un fichier puis importez-le ailleurs.</p>
+<p style="margin-top:0;color:var(--mut)">Les données sont enregistrées dans Firebase et partagées entre tous les PC. Exportez un fichier JSON pour garder une copie de sauvegarde.</p>
 <div class="row"><button class="g" id="exp">Exporter (JSON)</button><label class="g" style="margin:0;cursor:pointer">Importer (JSON)<input type="file" id="imp" accept=".json" class="hide"></label><button class="g d" id="clr">Tout effacer</button></div></div>
 </section>
 </main>
@@ -100,9 +100,20 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 const SUB={"Mécanique":["Petite dimension","Grande dimension"],"Profilé":["Traverse","Pièce simple"],"Tôlerie":[]};
 const ST={termine:"Terminé",retouche:"En retouche",bloque:"Bloqué",refuse:"Refusé"};
 const COL={termine:"--ok",retouche:"--ret",bloque:"--blo",refuse:"--ref"};
-let D={rows:[],teams:["Équipe 1","Équipe 2","Équipe 3"],reasons:["Plan manquant","Instrument indisponible","Non-conformité","Matière manquante"]};
-try{const s=localStorage.getItem("suiviRC");if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
-const save=()=>{try{localStorage.setItem("suiviRC",JSON.stringify(D))}catch(e){}};
+let D={rows:[]};
+const DB="https://suivi-rc-default-rtdb.europe-west1.firebasedatabase.app/suiviRC/rows";
+const newId=()=>Date.now()*1000+Math.floor(Math.random()*1000);
+const net=ok=>{const n=document.getElementById("net");n.textContent=ok?"● Connecté à la base":"● Hors ligne";};
+async function put(row){try{const r=await fetch(`${DB}/${row.id}.json`,{method:"PUT",body:JSON.stringify(row)});if(!r.ok)throw 0;net(true)}catch(e){net(false);alert("Enregistrement impossible. Vérifie la connexion internet et les règles Firebase.")}}
+async function del(id){try{const r=await fetch(`${DB}/${id}.json`,{method:"DELETE"});if(!r.ok)throw 0;net(true)}catch(e){net(false);alert("Suppression impossible. Vérifie la connexion internet.")}}
+async function wipe(){try{await fetch(DB+".json",{method:"DELETE"});net(true)}catch(e){net(false)}}
+async function importRows(rows){const m={};rows.forEach(r=>{r.id=r.id||newId();m[r.id]=r});
+  D.rows=D.rows.filter(r=>!m[r.id]).concat(Object.values(m));renderData();
+  try{const r=await fetch(DB+".json",{method:"PATCH",body:JSON.stringify(m)});if(!r.ok)throw 0;net(true)}catch(e){net(false);alert("Import impossible.")}}
+let last="";
+async function load(){try{const r=await fetch(DB+".json");if(!r.ok)throw 0;const o=await r.json();const rows=o?Object.values(o):[];net(true);
+  const j=JSON.stringify(rows);if(j!==last&&!document.getElementById("dlg").open){last=j;D.rows=rows;renderData()}}catch(e){net(false)}}
+setInterval(load,8000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 const $=i=>document.getElementById(i);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -134,11 +145,11 @@ $("save").onclick=()=>{
   if(!num)return m.textContent="Entrez le N° d'OF.";
   if(!type)return m.textContent="Choisissez le type d'OF.";
   if(!status)return m.textContent="Choisissez le statut.";
-  const row={id:Date.now(),num,type,sub:SUB[type].length?$("sub").value:"",status,
+  const row={id:newId(),num,type,sub:SUB[type].length?$("sub").value:"",status,
     team:"",reason:status!=="termine"?$("reason").value.trim():"",
     dt:$("dt").value||toLocal(new Date())};
   if(status!=="termine"&&!row.reason)return m.textContent="Indiquez la raison.";
-  D.rows.push(row);save();
+  D.rows.push(row);put(row);
   $("num").value="";$("status").value="";$("reason").value="";$("dt").value=toLocal(new Date());refreshForm();
   m.style.color="var(--ok)";m.textContent="Enregistré.";setTimeout(()=>m.textContent="",2500);render();
 };
@@ -166,9 +177,9 @@ window.edit=id=>{cur=D.rows.find(r=>r.id===id);if(!cur)return;
 $("esave").onclick=()=>{const s=$("e_status").value,t=$("e_type").value;
   Object.assign(cur,{num:$("e_num").value.trim()||cur.num,type:t,sub:SUB[t].length?$("e_sub").value:"",status:s,
     team:"",reason:s!=="termine"?$("e_reason").value.trim():"",dt:$("e_dt").value||cur.dt});
-  save();$("dlg").close();render()};
+  put(cur);$("dlg").close();render()};
 $("ecancel").onclick=()=>$("dlg").close();
-$("edel").onclick=()=>{if(confirm("Supprimer cette saisie ?")){D.rows=D.rows.filter(r=>r!==cur);save();$("dlg").close();render()}};
+$("edel").onclick=()=>{if(confirm("Supprimer cette saisie ?")){D.rows=D.rows.filter(r=>r!==cur);del(cur.id);$("dlg").close();render()}};
 
 // période
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -204,6 +215,9 @@ function dash(){
 function render(){
   refreshForm();
   if(!$("dt").value)$("dt").value=toLocal(new Date());
+  renderData();
+}
+function renderData(){
   $("recent").innerHTML=rowsTable(sorted(D.rows).slice(0,8));
   const q=$("q").value.trim().toLowerCase();
   $("all").innerHTML=rowsTable(sorted(D.rows).filter(r=>r.num.toLowerCase().includes(q)));
@@ -215,13 +229,13 @@ $("q").oninput=render;
 function dl(name,text,type){const a=document.createElement("a");a.href="data:"+type+";charset=utf-8,"+encodeURIComponent(text);a.download=name;a.click()}
 $("exp").onclick=()=>dl("suivi-rc.json",JSON.stringify(D),"application/json");
 $("imp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=()=>{try{const j=JSON.parse(r.result);if(!Array.isArray(j.rows))throw 0;D=Object.assign(D,j);save();render();alert("Données importées.")}catch(x){alert("Fichier invalide.")}};r.readAsText(f)};
-$("clr").onclick=()=>{if(confirm("Effacer toutes les saisies ?")){D.rows=[];save();render()}};
+  r.onload=()=>{try{const j=JSON.parse(r.result);if(!Array.isArray(j.rows))throw 0;importRows(j.rows);alert("Données importées.")}catch(x){alert("Fichier invalide.")}};r.readAsText(f)};
+$("clr").onclick=()=>{if(confirm("Effacer toutes les saisies ?")){D.rows=[];wipe();render()}};
 $("csv").onclick=()=>{const h=["Date et heure","OF","Type","Sous-type","Statut","Raison"];
   const c=v=>`"${String(v??"").replace(/"/g,'""')}"`;
   dl("suivi-rc.csv","\ufeff"+[h,...sorted(D.rows).map(r=>[fmt(r.dt),r.num,r.type,r.sub,ST[r.status],r.reason])].map(l=>l.map(c).join(";")).join("\n"),"text/csv")};
 
-render();
+render();load();
 </script>
 </body>
 </html>
