@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi des OF – Rapport de Contrôle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1b2733;--mut:#5d6b78;--line:#d3dae1;--acc:#0f5c8c;--ok:#1f7a4d;--ret:#b86e00;--blo:#6a4c93;--ref:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--card:#18222b;--ink:#e6ecf1;--mut:#9aa8b4;--line:#2c3a46;--acc:#5fb0e6;--ok:#4cc38a;--ret:#e8a23a;--blo:#b79be0;--ref:#ff7b72}}
+:root[data-theme="dark"]{--bg:#10171d;--card:#18222b;--ink:#e6ecf1;--mut:#9aa8b4;--line:#2c3a46;--acc:#5fb0e6;--ok:#4cc38a;--ret:#e8a23a;--blo:#b79be0;--ref:#ff7b72}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+header{background:var(--acc);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:18px;font-weight:600}header p{margin:2px 0 0;font-size:13px;opacity:.85}
+nav{display:flex;gap:4px;padding:10px 12px 0;flex-wrap:wrap}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:6px 6px 0 0;cursor:pointer;font:inherit}
+nav button[aria-selected="true"]{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{padding:12px;max-width:1100px;margin:0 auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button.b{background:var(--acc);color:#fff;border:0;padding:9px 16px;border-radius:5px;cursor:pointer;font:inherit;font-weight:500}
+button.g{background:transparent;color:var(--acc);border:1px solid var(--acc);padding:6px 12px;border-radius:5px;cursor:pointer;font:inherit}
+button.d{color:var(--ref);border-color:var(--ref)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hide{display:none!important}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+td.n,th.n{text-align:right}
+th{color:var(--mut);font-weight:500}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;color:#fff;font-size:12px}
+.t-termine{background:var(--ok)}.t-retouche{background:var(--ret)}.t-bloque{background:var(--blo)}.t-refuse{background:var(--ref)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:6px;padding:10px 12px}
+.kpi b{font-size:28px;display:block;line-height:1.1}.kpi span{color:var(--mut);font-size:13px}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:min(520px,94vw);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.msg{color:var(--ok);font-size:13px;min-height:18px}
+@media print{header,nav,.noprint{display:none!important}section{display:none!important}#dash{display:block!important}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<header><h1>Suivi des OF – Rapport de Contrôle (RC)</h1><p>First Article Inspection · indicateurs hebdomadaires</p></header>
+<nav role="tablist">
+<button role="tab" data-t="saisie" aria-selected="true">Saisie</button>
+<button role="tab" data-t="liste" aria-selected="false">Tous les OF</button>
+<button role="tab" data-t="dash" aria-selected="false">Tableau de bord</button>
+<button role="tab" data-t="param" aria-selected="false">Paramètres</button>
+</nav>
+<main>
+
+<section id="saisie" class="on">
+<div class="card"><h2>Nouvelle saisie</h2>
+<form id="f" onsubmit="return false">
+<div class="grid">
+<div><label>N° d'OF</label><input id="num" autocomplete="off" placeholder="ex. 1234567"></div>
+<div><label>Type d'OF</label><select id="type"><option value="">— choisir —</option><option>Mécanique</option><option>Profilé</option><option>Tôlerie</option></select></div>
+<div id="subw" class="hide"><label id="sublab">Sous-type</label><select id="sub"></select></div>
+<div><label>Statut</label><select id="status"><option value="">— choisir —</option><option value="termine">Terminé (RC fait)</option><option value="retouche">Envoyé en retouche</option><option value="bloque">Bloqué</option><option value="refuse">Refusé</option></select></div>
+<div id="reasw" class="hide"><label>Raison</label><input id="reason" placeholder="Écrire la raison" autocomplete="off"></div>
+<div><label>Date et heure</label><input id="dt" type="datetime-local"></div>
+</div>
+<div class="row" style="margin-top:12px"><button class="b" id="save">Enregistrer</button><span class="msg" id="msg"></span></div>
+</form></div>
+<div class="card"><h2>Dernières saisies</h2><div class="wrap" id="recent"></div></div>
+</section>
+
+<section id="liste">
+<div class="card"><h2>Tous les OF</h2>
+<div class="row noprint" style="margin-bottom:10px"><input id="q" placeholder="Rechercher un N° d'OF" style="max-width:240px"><button class="g" id="csv">Exporter Excel (CSV)</button></div>
+<div class="wrap" id="all"></div></div>
+</section>
+
+<section id="dash">
+<div class="card"><div class="row noprint"><div><label>Date début</label><input type="date" id="d1"></div><div><label>Date fin</label><input type="date" id="d2"></div><button class="b" id="pr" style="align-self:flex-end">Imprimer (PDF)</button><button class="g" id="xl" style="align-self:flex-end">Exporter Excel</button></div><h2 id="wk" style="margin:10px 0 0"></h2></div>
+<div class="kpis" id="kpis"></div>
+<div class="card"><h2>Par type et sous-type</h2><div class="wrap" id="bytype"></div></div>
+<div class="card"><h2>OF envoyés en retouche</h2><div class="wrap" id="lrt"></div></div>
+<div class="card"><h2>OF bloqués</h2><div class="wrap" id="lbl"></div></div>
+<div class="card"><h2>OF refusés</h2><div class="wrap" id="lrf"></div></div>
+</section>
+
+<section id="param">
+<div class="card"><h2>Sauvegarde des données</h2>
+<p style="margin-top:0;color:var(--mut)">Les données sont gardées dans ce navigateur, sur ce PC. Pour les déplacer ou les sauvegarder, exportez un fichier puis importez-le ailleurs.</p>
+<div class="row"><button class="g" id="exp">Exporter (JSON)</button><label class="g" style="margin:0;cursor:pointer">Importer (JSON)<input type="file" id="imp" accept=".json" class="hide"></label><button class="g d" id="clr">Tout effacer</button></div></div>
+</section>
+</main>
+
+<dialog id="dlg"><h2 style="margin-top:0">Modifier la saisie</h2><div id="ed" class="grid"></div>
+<div class="row" style="margin-top:12px"><button class="b" id="esave">Enregistrer</button><button class="g" id="ecancel">Annuler</button><button class="g d" id="edel" style="margin-left:auto">Supprimer</button></div></dialog>
+
+<script>
+const SUB={"Mécanique":["Petite dimension","Grande dimension"],"Profilé":["Traverse","Pièce simple"],"Tôlerie":[]};
+const ST={termine:"Terminé",retouche:"En retouche",bloque:"Bloqué",refuse:"Refusé"};
+const COL={termine:"--ok",retouche:"--ret",bloque:"--blo",refuse:"--ref"};
+let D={rows:[],teams:["Équipe 1","Équipe 2","Équipe 3"],reasons:["Plan manquant","Instrument indisponible","Non-conformité","Matière manquante"]};
+try{const s=localStorage.getItem("suiviRC");if(s)D=Object.assign(D,JSON.parse(s))}catch(e){}
+const save=()=>{try{localStorage.setItem("suiviRC",JSON.stringify(D))}catch(e){}};
+const $=i=>document.getElementById(i);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const toLocal=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmt=s=>{const d=new Date(s);return isNaN(d)?"":`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const tag=s=>`<span class="tag t-${s}">${ST[s]}</span>`;
+const opts=(a,v)=>a.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join("");
+
+// onglets
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.t));
+  render();
+});
+
+// formulaire de saisie
+function refreshForm(){
+  const t=$("type").value;$("subw").classList.toggle("hide",!SUB[t]||!SUB[t].length);
+  if(SUB[t]&&SUB[t].length){$("sublab").textContent=t==="Mécanique"?"Dimension":"Profilé";$("sub").innerHTML=opts(SUB[t])}
+  const s=$("status").value;
+  $("reasw").classList.toggle("hide",!s||s==="termine");
+}
+$("type").onchange=$("status").onchange=refreshForm;
+$("num").onblur=()=>{const n=$("num").value.trim();const p=[...D.rows].reverse().find(r=>r.num===n);
+  if(p&&!$("type").value){$("type").value=p.type;refreshForm();if(p.sub)$("sub").value=p.sub}};
+$("save").onclick=()=>{
+  const num=$("num").value.trim(),type=$("type").value,status=$("status").value;
+  const m=$("msg");m.style.color="var(--ref)";
+  if(!num)return m.textContent="Entrez le N° d'OF.";
+  if(!type)return m.textContent="Choisissez le type d'OF.";
+  if(!status)return m.textContent="Choisissez le statut.";
+  const row={id:Date.now(),num,type,sub:SUB[type].length?$("sub").value:"",status,
+    team:"",reason:status!=="termine"?$("reason").value.trim():"",
+    dt:$("dt").value||toLocal(new Date())};
+  if(status!=="termine"&&!row.reason)return m.textContent="Indiquez la raison.";
+  D.rows.push(row);save();
+  $("num").value="";$("status").value="";$("reason").value="";$("dt").value=toLocal(new Date());refreshForm();
+  m.style.color="var(--ok)";m.textContent="Enregistré.";setTimeout(()=>m.textContent="",2500);render();
+};
+
+// tableaux
+function rowsTable(rows,withAct=true){
+  if(!rows.length)return `<p style="color:var(--mut)">Aucune donnée.</p>`;
+  return `<table><tr><th>Date et heure</th><th>OF</th><th>Type</th><th>Statut</th><th>Raison</th>${withAct?"<th></th>":""}</tr>`+
+  rows.map(r=>`<tr><td>${fmt(r.dt)}</td><td><b>${esc(r.num)}</b></td><td>${esc(r.type)}${r.sub?" – "+esc(r.sub):""}</td><td>${tag(r.status)}</td><td style="white-space:normal;min-width:160px">${esc(r.reason)}</td>${withAct?`<td><button class="g" onclick="edit(${r.id})">Modifier</button></td>`:""}</tr>`).join("")+`</table>`;
+}
+const sorted=a=>[...a].sort((x,y)=>y.dt.localeCompare(x.dt));
+
+// modification (tout est modifiable)
+let cur=null;
+window.edit=id=>{cur=D.rows.find(r=>r.id===id);if(!cur)return;
+  $("ed").innerHTML=`<div><label>N° d'OF</label><input id="e_num" value="${esc(cur.num)}"></div>
+  <div><label>Type</label><select id="e_type">${opts(Object.keys(SUB),cur.type)}</select></div>
+  <div id="e_sw"><label>Sous-type</label><select id="e_sub"></select></div>
+  <div><label>Statut</label><select id="e_status">${Object.entries(ST).map(([k,v])=>`<option value="${k}"${k===cur.status?" selected":""}>${v}</option>`).join("")}</select></div>
+  <div id="e_rw"><label>Raison</label><input id="e_reason" value="${esc(cur.reason)}"></div>
+  <div><label>Date et heure</label><input id="e_dt" type="datetime-local" value="${esc(cur.dt)}"></div>`;
+  const upd=()=>{const t=$("e_type").value;$("e_sw").classList.toggle("hide",!SUB[t].length);$("e_sub").innerHTML=opts(SUB[t],cur.sub);
+    const s=$("e_status").value;$("e_rw").classList.toggle("hide",s==="termine")};
+  $("e_type").onchange=$("e_status").onchange=upd;upd();$("dlg").showModal()};
+$("esave").onclick=()=>{const s=$("e_status").value,t=$("e_type").value;
+  Object.assign(cur,{num:$("e_num").value.trim()||cur.num,type:t,sub:SUB[t].length?$("e_sub").value:"",status:s,
+    team:"",reason:s!=="termine"?$("e_reason").value.trim():"",dt:$("e_dt").value||cur.dt});
+  save();$("dlg").close();render()};
+$("ecancel").onclick=()=>$("dlg").close();
+$("edel").onclick=()=>{if(confirm("Supprimer cette saisie ?")){D.rows=D.rows.filter(r=>r!==cur);save();$("dlg").close();render()}};
+
+// période
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+(function(){const m=new Date();m.setHours(0,0,0,0);m.setDate(m.getDate()-((m.getDay()+6)%7));const e=new Date(m);e.setDate(e.getDate()+6);$("d1").value=ymd(m);$("d2").value=ymd(e)})();
+$("d1").onchange=$("d2").onchange=dash;
+$("pr").onclick=()=>window.print();
+$("xl").onclick=()=>{
+  const c=k=>Object.keys(ST).map(k=>`<tr><td>${ST[k]}</td><td>${curR.filter(r=>r.status===k).length}</td></tr>`).join("");
+  const html=`<html><head><meta charset="utf-8"></head><body><h3>Suivi des OF – ${$("wk").textContent}</h3>
+  <table border="1"><tr><th>Statut</th><th>Nombre d'OF</th></tr>${c()}</table>
+  <h4>Par type et sous-type</h4>${$("bytype").innerHTML}<h4>OF envoyés en retouche</h4>${$("lrt").innerHTML}
+  <h4>OF bloqués</h4>${$("lbl").innerHTML}<h4>OF refusés</h4>${$("lrf").innerHTML}</body></html>`;
+  dl(`suivi-rc_${$("d1").value}_${$("d2").value}.xls`,html,"application/vnd.ms-excel")};
+let curR=[];
+function dash(){
+  let a=$("d1").value,b=$("d2").value;if(a&&b&&b<a){[a,b]=[b,a]}
+  const start=a?new Date(a+"T00:00"):new Date(0),end=b?new Date(b+"T00:00"):new Date(8.64e15-1e9);if(b)end.setDate(end.getDate()+1);
+  const f=v=>v.split("-").reverse().join("/");
+  $("wk").textContent=a&&b?`Période du ${f(a)} au ${f(b)}`:"Toute la période";
+  const R=D.rows.filter(r=>{const d=new Date(r.dt);return d>=start&&d<end});curR=R;
+  const cnt=s=>R.filter(r=>r.status===s).length;
+  $("kpis").innerHTML=Object.keys(ST).map(k=>`<div class="kpi" style="--c:var(${COL[k]})"><b>${cnt(k)}</b><span>${ST[k]}</span></div>`).join("")+
+    `<div class="kpi" style="--c:var(--acc)"><b>${new Set(R.map(r=>r.num)).size}</b><span>OF différents</span></div>`;
+  const keys=[];Object.keys(SUB).forEach(t=>SUB[t].length?SUB[t].forEach(s=>keys.push([t,s])):keys.push([t,""]));
+  $("bytype").innerHTML=`<table><tr><th>Type</th><th>Sous-type</th>${Object.values(ST).map(v=>`<th class="n">${v}</th>`).join("")}<th class="n">Total</th></tr>`+
+    keys.map(([t,s])=>{const q=R.filter(r=>r.type===t&&(r.sub||"")===s);
+      return `<tr><td>${t}</td><td>${s||"—"}</td>${Object.keys(ST).map(k=>`<td class="n">${q.filter(r=>r.status===k).length}</td>`).join("")}<td class="n"><b>${q.length}</b></td></tr>`}).join("")+`</table>`;
+  $("lrt").innerHTML=rowsTable(sorted(R.filter(r=>r.status==="retouche")),false);
+  $("lbl").innerHTML=rowsTable(sorted(R.filter(r=>r.status==="bloque")),false);
+  $("lrf").innerHTML=rowsTable(sorted(R.filter(r=>r.status==="refuse")),false);
+}
+
+function render(){
+  refreshForm();
+  if(!$("dt").value)$("dt").value=toLocal(new Date());
+  $("recent").innerHTML=rowsTable(sorted(D.rows).slice(0,8));
+  const q=$("q").value.trim().toLowerCase();
+  $("all").innerHTML=rowsTable(sorted(D.rows).filter(r=>r.num.toLowerCase().includes(q)));
+  dash();
+}
+$("q").oninput=render;
+
+// paramètres
+function dl(name,text,type){const a=document.createElement("a");a.href="data:"+type+";charset=utf-8,"+encodeURIComponent(text);a.download=name;a.click()}
+$("exp").onclick=()=>dl("suivi-rc.json",JSON.stringify(D),"application/json");
+$("imp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const j=JSON.parse(r.result);if(!Array.isArray(j.rows))throw 0;D=Object.assign(D,j);save();render();alert("Données importées.")}catch(x){alert("Fichier invalide.")}};r.readAsText(f)};
+$("clr").onclick=()=>{if(confirm("Effacer toutes les saisies ?")){D.rows=[];save();render()}};
+$("csv").onclick=()=>{const h=["Date et heure","OF","Type","Sous-type","Statut","Raison"];
+  const c=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  dl("suivi-rc.csv","\ufeff"+[h,...sorted(D.rows).map(r=>[fmt(r.dt),r.num,r.type,r.sub,ST[r.status],r.reason])].map(l=>l.map(c).join(";")).join("\n"),"text/csv")};
+
+render();
+</script>
+</body>
+</html>
